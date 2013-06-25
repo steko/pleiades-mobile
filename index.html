@@ -15,26 +15,46 @@
   <h1 id="title"></h1>
   <p id="description"></p>
   <div id="map" style="height: 300px; width: 100%"></div>
+  <ul id="names"></ul>
+  <ul id="connections"></ul>
   <p id="pleiadesurl"></p>
-  <ul id="names">
     <script type="text/javascript">
       var url = $.url(); // parse the current page URL
       $.getJSON('http://pleiades.stoa.org/places/' + url.param('p') + '/json', function(data) {
       $('#title').text(data["title"]);
       $('#description').text(data["description"]);
       $('#pleiadesurl').html('<a href="http://pleiades.stoa.org/places/' + data["id"] + '">Full version</a>');
-
+      var names = [];
+      $.each(data["names"], function(index, value) {
+        names.push('<li class="name">' + value + '</li>')
+      });
+      $('#names').html(names.join('\n'));
+      $('#names').before('<h2>Names</h2>');
+      var connections = [];
+      $.each(data["connectsWith"], function(index, value) {
+        connections.push('<li class="connection"><a href="' + url.attr('path') + '?p=' + value + '">' + value + '</a></li>')
+      });
+      $('#connections').html(connections.join('\n'));
+      $('#connections').before('<h2>Connects with</h2>');
       var southWest = new L.LatLng(data["bbox"][1], data["bbox"][0]),
       northEast = new L.LatLng(data["bbox"][3], data["bbox"][2]),
       bounds = new L.LatLngBounds(southWest, northEast);
       var map = L.map('map').fitBounds(bounds);
-      L.geoJson(data["features"]).addTo(map);
+	function onEachFeature(feature, layer) {
+	    // does this feature have a property named snippet?
+	    if (feature.properties && feature.properties.snippet) {
+		layer.bindPopup('<a href="' + feature.properties.link + '">' + feature.properties.snippet + '</a><br/>' + feature.properties.description);
+	    }
+	}
+      L.geoJson(data["features"], {
+	onEachFeature: onEachFeature
+	}).addTo(map);
       // add an OpenStreetMap tile layer
       L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(map);
 });
     </script>
-  </ul>
+
 </body>
 </html>
