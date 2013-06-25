@@ -1,36 +1,40 @@
 <!DOCTYPE html> 
 <html> 
-<head> 
-	<title>Pleiades</title> 
-	<meta name="viewport" content="width=device-width, initial-scale=1"> 
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
-        <script src="purl.js" type="text/javascript"></script>
-</head> 
-<body> 
+<head>
+  <title>Pleiades</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+  <script src="purl.js" type="text/javascript"></script>
+  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.5/leaflet.css" />
+  <!--[if lte IE 8]>
+      <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.5/leaflet.ie.css" />
+      <![endif]-->
+  <script src="http://cdn.leafletjs.com/leaflet-0.5/leaflet.js"></script>
+</head>
+<body>
+  <h1 id="title"></h1>
+  <p id="description"></p>
+  <div id="map" style="height: 300px; width: 100%"></div>
+  <p id="pleiadesurl"></p>
+  <ul id="names">
+    <script type="text/javascript">
+      var url = $.url(); // parse the current page URL
+      $.getJSON('http://pleiades.stoa.org/places/' + url.param('p') + '/json', function(data) {
+      $('#title').text(data["title"]);
+      $('#description').text(data["description"]);
+      $('#pleiadesurl').html('<a href="http://pleiades.stoa.org/places/' + data["id"] + '">Full version</a>');
 
-<h1 id="title"></h1>
-<p id="description"></p>
-<p id="pleiadesurl"></p>
-<ul id="names">
-<script type="text/javascript">
-    var url = $.url(); // parse the current page URL
-    $.getJSON('http://pleiades.stoa.org/places/' + url.param('p') + '/json', function(data) {
-
-	$('#title').text(data["title"]);
-	$('#description').text(data["description"]);
-	$('#pleiadesurl').html('<a href="http://pleiades.stoa.org/places/' + data["id"] + '">Full version</a>');
-	
-	$.each(data["names"], function(item) {
-	    items.push('<li>' + item + '</li>');
-	});
-	$('<ul/>', {
-	    'class': 'names',
-	    html: items.join('')
-	}).appendTo('#names');
-    });
-</script>
-</ul>		
-    </div><!-- /content -->
-    </div><!-- /page -->
-    </body>
-</html>	
+      var southWest = new L.LatLng(data["bbox"][1], data["bbox"][0]),
+      northEast = new L.LatLng(data["bbox"][3], data["bbox"][2]),
+      bounds = new L.LatLngBounds(southWest, northEast);
+      var map = L.map('map').fitBounds(bounds);
+      L.geoJson(data["features"]).addTo(map);
+      // add an OpenStreetMap tile layer
+      L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+});
+    </script>
+  </ul>
+</body>
+</html>
